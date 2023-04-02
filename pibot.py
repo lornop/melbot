@@ -13,6 +13,12 @@
 #change pinouts to account for TFT
 #Feb 02, 2022
 
+#Change pinouts to match the Motor Controller
+#Added some PWM readings from phone.py to control the speed of the bot
+#Comment out the printing to console because we run this from systemd
+#Mar 30, 2023
+
+
 import pigpio
 import time
 from multiprocessing import Process, Pipe
@@ -22,12 +28,27 @@ import sound
 import multiprocessing as mp
 #print("Number of processors: ", mp.cpu_count())
 
+"""
+So we send the PWM signal to the PWM channel
+One of the IN Pins high and the other low is what does the direction
+Swap the HIGH and LOW to change the direction
+
+These are the original pinout
+my left and right track were backwards
 PWML = 12
-IN1L = 6 
-IN2L = 5 
+IN1L = 5 
+IN2L = 6 
 PWMR = 13
 IN3R = 22 
 IN4R = 27
+"""
+
+PWML = 13
+IN1L = 22
+IN2L = 27
+PWMR = 12
+IN3R = 5
+IN4R = 6
 
 # Defining main function
 def main():
@@ -59,7 +80,7 @@ def main():
     while(True):
 
         gamepadValues = parent_conn.recv()
-        #print('gamepadValues: ' + gamepadValues[0] + ' ' + str(gamepadValues[1]) + ' ' + gamepadValues[2]+ ' ' + str(gamepadValues[3])+ ' ' + gamepadValues[4])
+#        print('gamepadValues: ' + gamepadValues[0] + ' ' + str(gamepadValues[1]) + ' ' + gamepadValues[2]+ ' ' + str(gamepadValues[3])+ ' ' + gamepadValues[4])
 
 
         """
@@ -74,6 +95,7 @@ def main():
         """    
         
         #define the PWM variables
+        # I need to do this or the program complains when its run
         leftPWM = 0
         rightPWM = 0
 
@@ -86,15 +108,24 @@ def main():
         else:
             if leftJoyValue != 0:
                 if gamepadValues[0] == 'F':
-                    leftPWM = 50 + (leftJoyValue / 2)
+                    leftPWM = (leftJoyValue)
+                    pi.write(IN1L, 0)
+                    pi.write(IN2L, 1)
                 elif gamepadValues[0] == 'B':
-                    leftPWM = 50 - (leftJoyValue / 2)
+                    leftPWM = (leftJoyValue)
+                    pi.write(IN1L, 1)
+                    pi.write(IN2L, 0)
 
             if rightJoyValue != 0:
                 if gamepadValues[2] == 'F':
-                    rightPWM = 50 + (rightJoyValue / 2)
+                    rightPWM = (rightJoyValue)
+                    pi.write(IN3R, 0)
+                    pi.write(IN4R, 1)
                 elif gamepadValues[2] == 'B':
-                    rightPWM = 50 - (rightJoyValue / 2)
+                    rightPWM = (rightJoyValue)
+                    pi.write(IN3R, 1)
+                    pi.write(IN4R, 0)
+
 
 
         #gamepad control for x and y buttons
@@ -112,12 +143,12 @@ def main():
 
         Radj = 0 
             
-        pi.set_PWM_dutycycle(PWML, leftPWM)        
-        pi.set_PWM_dutycycle(PWMR, rightPWM)
+        pi.set_PWM_dutycycle(PWML, int(leftPWM))        
+        pi.set_PWM_dutycycle(PWMR, int(rightPWM))
         
-#        print(str(Ladj) + ' ' + str(Radj))        
+#        print(str(leftPWM) + ' ' + str(rightPWM))        
 
-        time.sleep(0.) #100mS
+        #time.sleep(0.1) #100mS
 
 
 # Using the special variable
