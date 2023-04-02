@@ -101,8 +101,8 @@ def main():
 
         #gamepad control for left and right sticks
         try:
-            leftJoyValue = int(gamepadValues[1])
-            rightJoyValue = int(gamepadValues[3])
+            leftJoyValue = int(round(gamepadValues[1] / 10.0)) * 10
+            rightJoyValue = int(round(gamepadValues[3] / 10.0)) * 10
         except ValueError:
             print("Invalid joystick value: ", gamepadValues[1], gamepadValues[3])
         else:
